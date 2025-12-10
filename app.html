@@ -325,9 +325,35 @@
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
         }
+        .back-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            color: #667eea;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+        }  
+
+        .back-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            background: #667eea;
+            color: white;
+        }
     </style>
 </head>
 <body>
+    <a href="index.html" class="back-home">← Back to Home</a>
     <div class="container">
         <h1>🎨 Color Memory Challenge</h1>
         <p class="subtitle">Watch the pattern, then recreate it!</p>
