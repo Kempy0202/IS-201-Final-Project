@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Memory Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .color-box {
+            aspect-ratio: 1;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-box:hover:not(.disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            border-color: white;
+        }
+
+        .color-box.active {
+            transform: scale(0.85);
+        }
+
+        .color-box.flash {
+            animation: flash 0.4s ease;
+            transform: scale(1.15);
+            border-color: white;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        }
+
+        .color-box.correct {
+            animation: correctPulse 0.4s ease;
+        }
+
+        .color-box.wrong {
+            animation: shake 0.5s ease;
+            background: #f44336 !important;
+        }
+
+        .color-box.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        @keyframes flash {
+            0% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.15);
+                filter: brightness(1.8);
+            }
+            100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); filter: brightness(1.3); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .start-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .reset-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        .reset-btn:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 1.3em;
+            color: #667eea;
+            min-height: 40px;
+            margin-top: 20px;
+            font-weight: bold;
+            line-height: 1.4;
+        }
+
+        .instructions {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            color: #555;
+        }
+
+        .instructions h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        @keyframes messagePopIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .message.animate {
+            animation: messagePopIn 0.3s ease;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-content h2 {
+            color: #f44336;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .modal-content p {
+            color: #666;
+            font-size: 1.2em;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        .modal-content .score-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .modal-content .new-best {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            animation: pulse 1s ease infinite;
+        }
+
+        .modal-content button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .modal-content button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Color Memory Challenge</h1>
+        <p class="subtitle">Watch the pattern, then recreate it!</p>
+
+        <div class="instructions">
+            <h3>How to Play:</h3>
+            <ul>
+                <li>Click "Start Round" to see a color sequence</li>
+                <li>Watch carefully as colors flash in order</li>
+                <li>Recreate the pattern by clicking the colors</li>
+                <li>Each round adds one more color to remember!</li>
+            </ul>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">Round</div>
+                <div class="stat-value" id="round">1</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Best</div>
+                <div class="stat-value" id="best">0</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea"></div>
+
+        <div class="message" id="message">Click "Start Round" to begin!</div>
+
+        <div class="controls">
+            <button class="start-btn" id="startBtn">Start Round</button>
+            <button class="reset-btn" id="resetBtn">Reset Game</button>
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>💥 Game Over!</h2>
+            <p>You reached <strong>Round <span id="modalRound"></span></strong></p>
+            <div class="score-display" id="modalScore">
+                Final Score: <span id="modalScoreValue"></span>
+            </div>
+            <p id="modalMessage"></p>
+            <button id="modalCloseBtn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', 
+            '#FFA07A', '#98D8C8', '#F7DC6F',
+            '#BB8FCE', '#85C1E2', '#F8B739'
+        ];
+
+        const frequencies = [329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33, 659.25, 698.46];
+
+        let sequence = [];
+        let playerSequence = [];
+        let round = 1;
+        let score = 0;
+        let bestScore = localStorage.getItem('colorMemoryBest') || 0;
+        let isPlaying = false;
+        let isPlayerTurn = false;
+        let audioContext;
+
+        const gameArea = document.getElementById('gameArea');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const messageEl = document.getElementById('message');
+        const roundEl = document.getElementById('round');
+        const scoreEl = document.getElementById('score');
+        const bestEl = document.getElementById('best');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        // Initialize audio context
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Play tone
+        function playTone(frequency, duration = 300) {
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration / 1000);
+        }
+
+        // Play error sound
+        function playErrorSound() {
+            if (!audioContext) return;
+            playTone(100, 500);
+        }
+
+        // Play success sound
+        function playSuccessSound() {
+            if (!audioContext) return;
+            playTone(800, 200);
+            setTimeout(() => playTone(1000, 200), 100);
+        }
+
+        // Initialize game
+        function init() {
+            gameArea.innerHTML = '';
+            colors.forEach((color, index) => {
+                const box = document.createElement('div');
+                box.className = 'color-box';
+                box.style.backgroundColor = color;
+                box.dataset.index = index;
+                box.addEventListener('click', handlePlayerClick);
+                box.addEventListener('mousedown', () => box.classList.add('active'));
+                box.addEventListener('mouseup', () => box.classList.remove('active'));
+                box.addEventListener('mouseleave', () => box.classList.remove('active'));
+                gameArea.appendChild(box);
+            });
+            bestEl.textContent = bestScore;
+        }
+
+        // Update message with animation
+        function showMessage(text) {
+            messageEl.textContent = text;
+            messageEl.classList.remove('animate');
+            void messageEl.offsetWidth; // Trigger reflow
+            messageEl.classList.add('animate');
+        }
+
+        // Start a new round
+        function startRound() {
+            if (isPlaying) return;
+            
+            initAudio(); // Initialize audio on first user interaction
+            
+            isPlaying = true;
+            isPlayerTurn = false;
+            playerSequence = [];
+            startBtn.disabled = true;
+            
+            // Add new color to sequence
+            const randomColor = Math.floor(Math.random() * colors.length);
+            sequence.push(randomColor);
+            
+            showMessage(`Round ${round}: Watch carefully... 👀`);
+            disableAllBoxes(true);
+            
+            // Show sequence
+            setTimeout(() => playSequence(), 800);
+        }
+
+        // Play the sequence
+        async function playSequence() {
+            for (let i = 0; i < sequence.length; i++) {
+                await new Promise(resolve => {
+                    setTimeout(() => {
+                        flashBox(sequence[i]);
+                        playTone(frequencies[sequence[i]], 400);
+                        resolve();
+                    }, 600);
+                });
+            }
+            
+            // Player's turn
+            setTimeout(() => {
+                isPlayerTurn = true;
+                isPlaying = false;
+                disableAllBoxes(false);
+                showMessage(`Your turn! Click ${sequence.length} color${sequence.length > 1 ? 's' : ''} 🎯`);
+                startBtn.disabled = false;
+            }, 600);
+        }
+
+        // Flash a box
+        function flashBox(index) {
+            const box = document.querySelector(`[data-index="${index}"]`);
+            box.classList.add('flash');
+            setTimeout(() => box.classList.remove('flash'), 400);
+        }
+
+        // Handle player click
+        function handlePlayerClick(e) {
+            if (!isPlayerTurn || e.target.classList.contains('disabled')) return;
+            
+            const clickedIndex = parseInt(e.target.dataset.index);
+            playerSequence.push(clickedIndex);
+            
+            // Visual and audio feedback
+            flashBox(clickedIndex);
+            playTone(frequencies[clickedIndex], 200);
+            
+            // Check if correct
+            const currentStep = playerSequence.length - 1;
+            if (playerSequence[currentStep] !== sequence[currentStep]) {
+                // Wrong!
+                gameOver(e.target);
+                return;
+            }
+            
+            // Mark as correct
+            e.target.classList.add('correct');
+            setTimeout(() => e.target.classList.remove('correct'), 400);
+            
+            // Update progress message
+            const remaining = sequence.length - playerSequence.length;
+            if (remaining > 0) {
+                showMessage(`Great! ${remaining} more to go! 🎯`);
+            }
+            
+            // Check if round complete
+            if (playerSequence.length === sequence.length) {
+                roundComplete();
+            }
+        }
+
+        // Round completed successfully
+        function roundComplete() {
+            isPlayerTurn = false;
+            disableAllBoxes(true);
+            
+            score += round * 10;
+            round++;
+            
+            updateDisplay();
+            playSuccessSound();
+            showMessage(`🎉 Perfect! Round ${round - 1} complete! +${(round - 1) * 10} points!`);
+            
+            setTimeout(() => {
+                showMessage('Ready for the next challenge? 🚀');
+            }, 2000);
+        }
+
+        // Game over
+        function gameOver(wrongBox) {
+            isPlayerTurn = false;
+            disableAllBoxes(true);
+            
+            playErrorSound();
+            
+            // Flash wrong box
+            wrongBox.classList.add('wrong');
+            setTimeout(() => wrongBox.classList.remove('wrong'), 500);
+            
+            showMessage(`❌ Oops! Game Over! You reached Round ${round}`);
+            
+            // Show modal after a brief delay
+            setTimeout(() => {
+                showGameOverModal();
+            }, 1000);
+            
+            startBtn.disabled = false;
+        }
+
+        // Show game over modal
+        function showGameOverModal() {
+            const modalRound = document.getElementById('modalRound');
+            const modalScoreValue = document.getElementById('modalScoreValue');
+            const modalScore = document.getElementById('modalScore');
+            const modalMessage = document.getElementById('modalMessage');
+            
+            modalRound.textContent = round;
+            modalScoreValue.textContent = score;
+            
+            // Check for new best score
+            const isNewBest = score > bestScore;
+            if (isNewBest) {
+                bestScore = score;
+                localStorage.setItem('colorMemoryBest', bestScore);
+                bestEl.textContent = bestScore;
+                modalScore.classList.add('new-best');
+                modalMessage.textContent = '🏆 NEW HIGH SCORE! 🏆';
+            } else {
+                modalScore.classList.remove('new-best');
+                if (score === 0) {
+                    modalMessage.textContent = 'You\'re ass nigga! Try to remember the pattern! 💪';
+                } else if (score < 50) {
+                    modalMessage.textContent = 'Your mom\'s a fat whore! Keep practicing! 🎯';
+                } else if (score < 100) {
+                    modalMessage.textContent = 'Youre so bad at the game I want to kill myself! You\'re getting better! 🌟';
+                } else {
+                    modalMessage.textContent = 'Hey Tristan! Tired of being ass at everygame you play? 🔥';
+                }
+            }
+            
+            gameOverModal.classList.add('show');
+        }
+
+        // Close modal
+        function closeModal() {
+            gameOverModal.classList.remove('show');
+            resetGame();
+        }
+
+        // Reset game
+        function resetGame() {
+            sequence = [];
+            playerSequence = [];
+            round = 1;
+            score = 0;
+            isPlaying = false;
+            isPlayerTurn = false;
+            
+            updateDisplay();
+            showMessage('Fresh start! Click "Start Round" to begin! 🎮');
+            startBtn.disabled = false;
+            disableAllBoxes(false);
+        }
+
+        // Update display
+        function updateDisplay() {
+            roundEl.textContent = round;
+            scoreEl.textContent = score;
+        }
+
+        // Enable/disable boxes
+        function disableAllBoxes(disable) {
+            document.querySelectorAll('.color-box').forEach(box => {
+                if (disable) {
+                    box.classList.add('disabled');
+                } else {
+                    box.classList.remove('disabled');
+                }
+            });
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startRound);
+        resetBtn.addEventListener('click', resetGame);
+        modalCloseBtn.addEventListener('click', closeModal);
+
+        // Initialize game on load
+        init();
+    </script>
+</body>
+</html>
